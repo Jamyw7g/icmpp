@@ -46,6 +46,36 @@ impl Response {
     pub fn len(&self) -> usize {
         8 + self.dat.len()
     }
+
+    #[inline]
+    pub fn kind(&self) -> u8 {
+        self.typ
+    }
+
+    #[inline]
+    pub fn code(&self) -> u8 {
+        self.cod
+    }
+
+    #[inline]
+    pub fn checksum(&self) -> u16 {
+        self.sum
+    }
+
+    #[inline]
+    pub fn ident(&self) -> u16 {
+        self.idt
+    }
+
+    #[inline]
+    pub fn sequence(&self) -> u16 {
+        self.seq
+    }
+
+    #[inline]
+    pub fn data(&self) -> &[u8] {
+        &self.dat
+    }
 }
 
 #[derive(Debug)]
@@ -98,7 +128,7 @@ impl Icmp {
             sock,
             dst,
             ver,
-            typ: 0,
+            typ: 8,
             idt,
             seq: 0,
             dat: vec![0; len].into_boxed_slice(),
@@ -107,7 +137,7 @@ impl Icmp {
 
     pub fn send(&mut self) -> io::Result<usize> {
         let mut buf = BytesMut::with_capacity(self.serialize_len());
-        buf.put_u8(8);
+        buf.put_u8(self.typ);
         buf.put_u8(0);
         buf.put_u16(0);
         buf.put_u16(self.idt);
