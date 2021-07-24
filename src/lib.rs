@@ -15,6 +15,7 @@ pub const MAXSEQ: u16 = u16::MAX;
 
 #[derive(Debug)]
 pub struct Response {
+    ttl: u8,
     typ: u8,
     cod: u8,
     sum: u16,
@@ -24,7 +25,10 @@ pub struct Response {
 }
 
 impl Response {
-    pub fn decode(bytes: &[u8]) -> Self {
+    pub fn decode(bytes: &[u8], ip_hdr_len: usize) -> Self {
+        let ttl = bytes[8];
+
+        let bytes = &bytes[ip_hdr_len..];
         let typ = bytes[0];
         let cod = bytes[1];
         let sum = u16::from_be_bytes(bytes[2..4].try_into().unwrap());
@@ -33,6 +37,7 @@ impl Response {
         let dat = Vec::from(&bytes[8..]);
 
         Self {
+            ttl,
             typ,
             cod,
             sum,
@@ -45,6 +50,11 @@ impl Response {
     #[inline]
     pub fn len(&self) -> usize {
         8 + self.dat.len()
+    }
+
+    #[inline]
+    pub fn ttl(&self) -> u8 {
+        self.ttl
     }
 
     #[inline]
@@ -165,7 +175,7 @@ impl Icmp {
             if idt != self.idt {
                 continue;
             }
-            let resp = Response::decode(&dat[ip_hdr_len..]);
+            let resp = Response::decode(&dat, ip_hdr_len);
 
             return Ok((len, addr, resp));
         }
